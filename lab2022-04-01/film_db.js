@@ -51,13 +51,13 @@ function FilmLibrary() {
     this.getRated = () => this.filmLibrary.filter((f) => f.rating !== undefined).sort((a, b) => a.rating - b.rating);
 }
 
-function populateFilmTable(film_list) {
+function populateFilmTable(film_list, fl) {
     const tb = document.getElementById("film-table").children[0];
     // this needed to delete all elements inside table body
     tb.textContent = '';
-    for(const i of film_list) {
+    for(const i of film_list()) {
         const tr = document.createElement('tr');
-        tr.classList.add(`film-id-${i.id}`);
+        tr.setAttribute('id', `film-id-${i.id}`);
         const check_str = (i.fav) ? "checked" : "";
         const check_class = (check_str == "") ? "" : 'class="fav-checked"';
         const display_date = (i.date == undefined) ? "" : dayjs(i.date).format('LL');
@@ -69,14 +69,27 @@ function populateFilmTable(film_list) {
         for(let x = 0; x < i.rating; x++) { td.innerHTML += `<i class="bi bi-star-fill"></i>\n`; }
         for(let x = 0; x < 5 - i.rating; x++) { td.innerHTML += `<i class="bi bi-star"></i>\n`; }
         tr.appendChild(td);
+        tr.innerHTML += `<td><button type="button" class="btn btn-danger del-button"><i class="bi bi-trash"></i></button></td>`;
         tb.appendChild(tr);
+    }
+    bindDelButtons(film_list, fl);
+}
+
+function bindDelButtons(film_list, fl) {
+    const delButtons = document.getElementsByClassName("del-button");
+    for(let b of delButtons) {
+        b.addEventListener('click', (e) => {
+            const id = b.parentNode.parentNode.id.split('-').pop();
+            fl.deleteFilm(parseInt(id));
+            populateFilmTable(film_list, fl);
+        });
     }
 }
 
-function filter(name, f) {
+function filter(name, f, fl) {
     const filter_title = document.getElementById("filter-title");
     filter_title.textContent = name;
-    populateFilmTable(f());
+    populateFilmTable(f, fl);
 }
 
 document.addEventListener("DOMContentLoaded", (event) => {
@@ -88,7 +101,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     fl.addNewFilm(new Film(5, "Shrek", false, "2022-03-21", 3));
     fl.addNewFilm(new Film(6, "Inception", true, "2022-04-01", 5));
 
-    populateFilmTable(fl.filmLibrary);
+    populateFilmTable(fl.getAll, fl);
 
     const all_filter = document.getElementById("all-filter").children[0];
     const fav_filter = document.getElementById("fav-filter").children[0];
@@ -101,7 +114,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         selected_filter.classList.remove("selected-filter");
         selected_filter = all_filter.parentNode;
         selected_filter.classList.add("selected-filter");
-        filter("All", fl.getAll);
+        filter("All", fl.getAll, fl);
         // it's a link, we need to prevent defaul behaviour
         e.preventDefault();
     });
@@ -110,7 +123,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         selected_filter.classList.remove("selected-filter");
         selected_filter = fav_filter.parentNode;
         selected_filter.classList.add("selected-filter");
-        filter("Favorites", fl.getFavorites);
+        filter("Favorites", fl.getFavorites, fl);
         // it's a link, we need to prevent defaul behaviour
         e.preventDefault();
     });
@@ -119,7 +132,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         selected_filter.classList.remove("selected-filter");
         selected_filter = bestrate_filter.parentNode;
         selected_filter.classList.add("selected-filter");
-        filter("Best Rated", fl.getBestRated);
+        filter("Best Rated", fl.getBestRated, fl);
         // it's a link, we need to prevent defaul behaviour
         e.preventDefault();
     });
@@ -128,7 +141,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         selected_filter.classList.remove("selected-filter");
         selected_filter = lastmonth_filter.parentNode;
         selected_filter.classList.add("selected-filter");
-        filter("Seen Last Month", fl.getLastMonth);
+        filter("Seen Last Month", fl.getLastMonth, fl);
         // it's a link, we need to prevent defaul behaviour
         e.preventDefault();
     });
