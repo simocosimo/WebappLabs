@@ -1,5 +1,9 @@
-.row {
-    height: 100%;
+body {
+    min-height: 100%;
+}
+
+.container-fluid, .row {
+    min-height: 100%;
 }
 
 nav form {
@@ -35,11 +39,11 @@ nav form {
     padding: 15px;
 }
 
-#selected {
+.selected-filter {
     background-color: darkblue;
 }
 
-#selected a {
+.leftbar li.selected-filter a {
     color: white;
 }
 
