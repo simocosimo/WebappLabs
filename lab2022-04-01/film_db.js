@@ -40,7 +40,43 @@ function FilmLibrary() {
         })
     }
 
+    this.getAll = () => this.filmLibrary;
+
+    this.getBestRated = () => this.filmLibrary.filter((f) => f.rating == 5);
+
+    this.getFavorites = () => this.filmLibrary.filter((f) => f.fav);
+
+    this.getLastMonth = () => this.filmLibrary.filter((f) => f.date != undefined && dayjs().diff(f.date, 'month') <= 1);
+
     this.getRated = () => this.filmLibrary.filter((f) => f.rating !== undefined).sort((a, b) => a.rating - b.rating);
+}
+
+function populateFilmTable(film_list) {
+    const tb = document.getElementById("film-table").children[0];
+    // this needed to delete all elements inside table body
+    tb.textContent = '';
+    for(const i of film_list) {
+        const tr = document.createElement('tr');
+        tr.classList.add(`film-id-${i.id}`);
+        const check_str = (i.fav) ? "checked" : "";
+        const check_class = (check_str == "") ? "" : 'class="fav-checked"';
+        const display_date = (i.date == undefined) ? "" : dayjs(i.date).format('LL');
+        tr.innerHTML = `<td ${check_class}>${i.title}</td>`;
+        tr.innerHTML += `<td><div class="form-check"><input class="form-check-input" type="checkbox" value="" id="defaultCheck1" ${check_str}>
+                        <label class="form-check-label" for="defaultCheck1">Favorite</label></div></td>`;
+        tr.innerHTML += `<td>${display_date}</td>`;
+        const td = document.createElement('td');
+        for(let x = 0; x < i.rating; x++) { td.innerHTML += `<i class="bi bi-star-fill"></i>\n`; }
+        for(let x = 0; x < 5 - i.rating; x++) { td.innerHTML += `<i class="bi bi-star"></i>\n`; }
+        tr.appendChild(td);
+        tb.appendChild(tr);
+    }
+}
+
+function filter(name, f) {
+    const filter_title = document.getElementById("filter-title");
+    filter_title.textContent = name;
+    populateFilmTable(f());
 }
 
 document.addEventListener("DOMContentLoaded", (event) => {
@@ -52,26 +88,49 @@ document.addEventListener("DOMContentLoaded", (event) => {
     fl.addNewFilm(new Film(5, "Shrek", false, "2022-03-21", 3));
     fl.addNewFilm(new Film(6, "Inception", true, "2022-04-01", 5));
 
-    const tb = document.getElementById("film-table").children[0];
-    for(const i of fl.filmLibrary) {
-        const tr = document.createElement('tr');
-        const check_str = (i.fav) ? "checked" : "";
-        const check_class = (check_str == "") ? "" : 'class="fav-checked"';
-        const display_date = (i.date == undefined) ? "" : dayjs(i.date).format('LL');
-        tr.innerHTML = `<td ${check_class}>${i.title}</td>`;
-        tr.innerHTML += `<td><div class="form-check"><input class="form-check-input" type="checkbox" value="" id="defaultCheck1" ${check_str}>
-                        <label class="form-check-label" for="defaultCheck1">Favorite</label></div></td>`;
-        tr.innerHTML += `<td>${display_date}</td>`;
-        const td = document.createElement('td');
-        for(let x = 0; x < i.rating; x++) { 
-            //if(x == 0) tr.innerHTML += `<td>`;
-            td.innerHTML += `<i class="bi bi-star-fill"></i>\n`; 
-        }
-        for(let x = 0; x < 5 - i.rating; x++) { 
-            td.innerHTML += `<i class="bi bi-star"></i>\n`; 
-            //if(x == 4 - i.rating) tr.innerHTML += `</td>`;
-        }
-        tr.appendChild(td);
-        tb.appendChild(tr);
-    }
+    populateFilmTable(fl.filmLibrary);
+
+    const all_filter = document.getElementById("all-filter").children[0];
+    const fav_filter = document.getElementById("fav-filter").children[0];
+    const bestrate_filter = document.getElementById("bestrate-filter").children[0];
+    const lastmonth_filter = document.getElementById("lastmonth-filter").children[0];
+
+    let selected_filter = all_filter.parentNode;
+
+    all_filter.addEventListener('click', (e) => {
+        selected_filter.classList.remove("selected-filter");
+        selected_filter = all_filter.parentNode;
+        selected_filter.classList.add("selected-filter");
+        filter("All", fl.getAll);
+        // it's a link, we need to prevent defaul behaviour
+        e.preventDefault();
+    });
+
+    fav_filter.addEventListener('click', (e) => {
+        selected_filter.classList.remove("selected-filter");
+        selected_filter = fav_filter.parentNode;
+        selected_filter.classList.add("selected-filter");
+        filter("Favorites", fl.getFavorites);
+        // it's a link, we need to prevent defaul behaviour
+        e.preventDefault();
+    });
+
+    bestrate_filter.addEventListener('click', (e) => {
+        selected_filter.classList.remove("selected-filter");
+        selected_filter = bestrate_filter.parentNode;
+        selected_filter.classList.add("selected-filter");
+        filter("Best Rated", fl.getBestRated);
+        // it's a link, we need to prevent defaul behaviour
+        e.preventDefault();
+    });
+
+    lastmonth_filter.addEventListener('click', (e) => {
+        selected_filter.classList.remove("selected-filter");
+        selected_filter = lastmonth_filter.parentNode;
+        selected_filter.classList.add("selected-filter");
+        filter("Seen Last Month", fl.getLastMonth);
+        // it's a link, we need to prevent defaul behaviour
+        e.preventDefault();
+    });
+
 });
